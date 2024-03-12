@@ -6,16 +6,11 @@ import tensorflow as tf
 from tensorflow import keras
 
 from proteinbert.shared_utils.util import log
-from _new_tokenization import ADDED_TOKENS_PER_SEQ
-from _new_tokenization import encode_dataset,split_dataset_by_len
+from tokenization import ADDED_TOKENS_PER_SEQ
+from tokenization import encode_dataset,split_dataset_by_len
 
 class Config_Test:
 
-    # fold,use_LHD(bool),threshold,gpuを使う
-    # ,n_UNIQUE_LABELS,CUDA関連
-    # BENCHMARKS_DIR,BENCHMARK_NAME:__str__
-    # n_UNIQUE_LABELS:__len__
-    
     def __init__(self, args):
         
         self.mechanism_labels = {
@@ -73,8 +68,6 @@ class Config_Test:
 def evaluate_by_len(model_generator, input_encoder, config,  df, start_seq_len = 512, start_batch_size = 32, increase_factor = 2):#output_spec,
     
     assert model_generator.optimizer_weights is None
-    
-    #dataset = pd.DataFrame({'seq': df['sequence'], 'raw_y':df['mechanism']})
         
     results = []
     results_names = []
@@ -83,55 +76,30 @@ def evaluate_by_len(model_generator, input_encoder, config,  df, start_seq_len =
     index_list = []
     #inverse_UNIQUE_LABELS = {v:k for k,v in output_spec.unique_labels.items()}
     index_to_label = {}
-    #mutation_map = pd.DataFrame(columns = list(range(1392),index = list(range(20)))# 変異調査
     
     for len_matching_dataset, seq_len, batch_size, index in split_dataset_by_len(df, start_seq_len = start_seq_len, start_batch_size = start_batch_size, \
             increase_factor = increase_factor):
 
         X, y_true, sample_weights = encode_dataset(len_matching_dataset, input_encoder, \
                 seq_len = seq_len, needs_filtering = False)#output_spec,
-        #print(seq_len)
-        #print(y_pred)
         
         assert set(np.unique(sample_weights)) <= {0.0, 1.0}
         y_mask = (sample_weights == 1)
         
-        #model = model_generator.create_model(seq_len)
         model = keras.models.load_model(config.create_input_path(create_dataset_path = False))
         y_pred = model.predict(X, batch_size = batch_size)
         
         y_true = y_true[y_mask].flatten()
-        #print(y_pred)
-        #print(y_mask)
-        y_pred = y_pred[y_mask]
-        
-        #if output_spec.output_type.is_categorical:
-        y_pred = y_pred.reshape((-1, y_pred.shape[-1]))
-        #else:
-            #y_pred = y_pred.flatten()
-        
-        #result, y_pred_classes, propotion = get_evaluation_results(y_true, y_pred, output_spec)
-        #results.append(get_evaluation_results(y_true, y_pred, output_spec)[0])
-        #results_names.append(seq_len)
-        
+        y_pred = y_pred[y_mask].reshape((-1, y_pred.shape[-1]))
+        #y_pred = y_pred.reshape((-1, y_pred.shape[-1]))
         y_trues.append(y_true)
         y_preds.append(y_pred)
         index_list += index
         
     y_true = np.concatenate(y_trues, axis = 0)
     y_pred = np.concatenate(y_preds, axis = 0)
-    prediction, confusion_matrix = get_evaluation_results(y_true, y_pred, config, return_confusion_matrix = True)#output_spec,
-    
-    #results.append(all_results)
-    #results_names.append('All')
-    
-    #results = pd.DataFrame(results, index = results_names)
-    #results.index.name = 'Model seq len'
-    """
-    df['mechanism_preds'] = 0
-    for i,i_d in enumerate(index_list):
-        df.loc[i_d,'mechanism_preds'] = inverse_UNIQUE_LABELS[mechanism_preds[i]]
-    """
+    prediction, confusion_matrix = get_evaluation_results(y_true, y_pred, config, return_confusion_matrix = True)
+        
     for i in list(range(len(df))):
         index_to_label[index_list[i]] = prediction[i]
     df = pd.concat([df,pd.DataFrame.from_dict(index_to_label, orient='index').sort_index()],axis = 1)
@@ -143,32 +111,8 @@ def get_evaluation_results(y_true, y_pred, config, return_confusion_matrix = Fal
     from scipy.stats import spearmanr
     from sklearn.metrics import roc_auc_score, accuracy_score, confusion_matrix
             
-    #results = {}
-    #results['# records'] = len(y_true)
-            
-    #if output_spec.output_type.is_numeric:
-        #results['Spearman\'s rank correlation'] = spearmanr(y_true, y_pred)[0]
-        #confusion_matrix = None
-    #else:
-    
     str_unique_labels = list(map(str, config.unique_labels))
-    """
-        #if output_spec.output_type.is_binary:
-            
-            #y_pred_classes = (y_pred >= 0.5)
-            
-            if len(np.unique(y_true)) == 2:
-                results['AUC'] = roc_auc_score(y_true, y_pred)
-            else:
-                results['AUC'] = np.nan
-          
-        #elif output_spec.output_type.is_categorical:
-    """ 
     y_pred_classes = y_pred.argmax(axis = -1)
-            #results['Accuracy'] = accuracy_score(y_true, y_pred_classes)
-        #else:
-            #raise ValueError('Unexpected output type: %s' % output_spec.output_type)
-                    
     confusion_matrix = pd.DataFrame(confusion_matrix(y_true, y_pred_classes, labels = np.arange(config.n_mechanism_labels)), index = str_unique_labels, \
                     columns = str_unique_labels)
          
@@ -180,7 +124,7 @@ def get_evaluation_results(y_true, y_pred, config, return_confusion_matrix = Fal
 def calculate_attentions(model, input_encoder, seq, seq_len = None):
     
     from tensorflow.keras import backend as K
-    from ._new_tokenization import index_to_token
+    from tokenization import index_to_token
     
     if seq_len is None:
         seq_len = len(seq) + 2
@@ -239,7 +183,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--fold', type=int, help='The number of iterations in 5-fold CV.')
-    #parser.add_argument('--dir', type=str, help='Path to the dataset.')
     parser.add_argument('-LHD', '--use_LHD', action='store_true', help='Whether you use Low Homology Dataset or not.')
     parser.add_argument('-t', '--threshold', type=float, help='Sequence similarity thresholds set when creating LHD.', default='')
     parser.add_argument('-s', '--seed', type=int, help='Set random seed.', default=None)

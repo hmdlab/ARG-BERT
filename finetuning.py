@@ -8,36 +8,14 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import backend as K
 
-#from proteinbert import OutputType, OutputSpec, FinetuningModelGenerator,finetune, evaluate_by_len
 from proteinbert.existing_model_loading import load_pretrained_model
 from proteinbert.conv_and_global_attention_model import get_model_with_hidden_layers_as_outputs
 from proteinbert.shared_utils.util import log
-from model_generation import FinetuningModelGenerator
-from _new_tokenization import index_to_token, ADDED_TOKENS_PER_SEQ, mechanism_labels, encode_dataset
-
-"""
-class OutputType:
-    
-    def __init__(self, is_seq, output_type):
-        # self.is_seq = is_seq
-        # self.output_type = output_type
-        # self.is_numeric = (output_type == 'numeric')
-        self.is_binary = (output_type == 'binary')
-        # self.is_categorical = (output_type == 'categorical')
-        
-    def __str__(self):
-        if self.is_seq:
-            return '%s sequence' % self.output_type
-        else:
-            return 'global %s' % self.output_type
-"""            
+from proteinbert.model_generation import FinetuningModelGenerator
+from tokenization import index_to_token, ADDED_TOKENS_PER_SEQ, mechanism_labels, encode_dataset
+            
 class Config_Finetuning:
 
-    # fold,use_LHD(bool),threshold,gpuを使う
-    # ,n_UNIQUE_LABELS,CUDA関連
-    # BENCHMARKS_DIR,BENCHMARK_NAME:__str__
-    # n_UNIQUE_LABELS:__len__
-    
     def __init__(self, args):
         
         
@@ -47,7 +25,6 @@ class Config_Finetuning:
         self.threshold = args.threshold
         self.gpu = args.gpu
         self.seed = args.seed
-        #self.create_dataset_path = create_dataset_path
         
     def create_dataset_or_model_path(self, create_dataset_path):
 
@@ -80,52 +57,6 @@ class Config_Finetuning:
         if self.seed != None:
             return tf.random.set_seed(self.seed)
     
-    """
-    BENCHMARKS_DIR = 'dataset/CSV/c'+str(c)
-    BENCHMARK_NAME = 'fold_'+str(fold)+'_'+str(c)
-
-    # A local (non-global) bianry output
-    OUTPUT_TYPE = OutputType(False, 'categorical')
-    UNIQUE_LABELS = {
-        'antibiotic target alteration':0,
-        'antibiotic target replacement':1,
-        'antibiotic target protection':2,
-        'antibiotic inactivation':3,
-        'antibiotic efflux':4,
-        'others':5
-    }
-
-    OUTPUT_SPEC = OutputSpec(OUTPUT_TYPE, UNIQUE_LABELS)
-    tf.random.set_seed(4)
-    
-    config = tf.compat.v1.ConfigProto(
-    gpu_options=tf.compat.v1.GPUOptions(
-        visible_device_list="0,1", # specify GPU number
-        allow_growth=True
-        )
-    )
-    sess = tf.compat.v1.Session(config=config)
-
-    def __init__(self, output_type, unique_labels = None):
-        
-        if output_type.is_numeric:
-            assert unique_labels is None
-        elif output_type.is_binary:
-            if unique_labels is None:
-                unique_labels = [0, 1]
-            else:
-                assert unique_labels == [0, 1]
-        elif output_type.is_categorical:
-            assert unique_labels is not None
-        else:
-            raise ValueError('Unexpected output type: %s' % output_type)
-        
-        self.output_type = output_type
-        self.unique_labels = unique_labels
-        
-        if unique_labels is not None:
-            self.n_unique_labels = len(unique_labels)
-    """
             
 def finetune(model_generator, input_encoder, config, train, valid = None, seq_len = 512, batch_size = 32, \
         max_epochs_per_stage = 40, lr = None, begin_with_frozen_pretrained_layers = True, lr_with_frozen_pretrained_layers = None, n_final_epochs = 1, \
@@ -208,7 +139,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--fold', type=int, help='The number of iterations in 5-fold CV.')
-    #parser.add_argument('--dir', type=str, help='Path to the dataset.')
     parser.add_argument('-LHD', '--use_LHD', action='store_true', help='Whether you use Low Homology Dataset or not.', default=False)
     parser.add_argument('-t', '--threshold', type=float, help='Sequence similarity thresholds set when creating LHD.', default=0)
     parser.add_argument('-g', '--gpu', type=int, help='Assign the GPU devices you will use.', default=None)
