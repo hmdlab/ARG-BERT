@@ -54,15 +54,8 @@ def encode_dataset(dataset, input_encoder, mechanism_labels, seq_len = 512, need
     return X, Y, sample_weigths
 
 def encode_Y(raw_Y, seq_len = 512, mechanism_labels = mechanism_labels):
-    #if output_spec.output_type.is_seq:
-    #    return encode_seq_Y(raw_Y, seq_len, output_spec.output_type.is_binary, output_spec.unique_labels)
-    #elif output_spec.output_type.is_categorical:
     return encode_categorical_Y(raw_Y, mechanism_labels), np.ones(len(raw_Y))
-    #elif output_spec.output_type.is_numeric or output_spec.output_type.is_binary:
-    #    return raw_Y.values.astype(float), np.ones(len(raw_Y))
-    #else:
-    #    raise ValueError('Unexpected output type: %s' % output_spec.output_type)
-
+    
 def encode_seq_Y(seqs, seq_len, is_binary, mechanism_labels):
 
     label_to_index = {str(label): i for i, label in enumerate(mechanism_labels)}
