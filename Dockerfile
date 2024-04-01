@@ -14,8 +14,6 @@ RUN pip install numpy==1.21.0
 RUN pip install pandas
 RUN pip install scikit-learn
 RUN pip install biopython
-RUN pip install torch
-RUN pip install transformers
 
 WORKDIR /home
 EXPOSE 5004
