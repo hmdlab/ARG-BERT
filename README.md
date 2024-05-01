@@ -10,6 +10,8 @@ We have all the necessary packages (see Dockerfile) in the Docker environment. I
 TBA
 ```
 ## 2. Fine-tuning
+We cannot publish the HMD-ARG DB and Low Homology Dataset, but the format of the data is shown in the sample data in `Sample_data`.
+
 Run `finetuning.py` to train the ProteinBERT on ARGs by running the follwing commands.
 
 If you would like to train with the HMD-ARG DB, run:
