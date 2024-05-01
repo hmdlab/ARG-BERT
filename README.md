@@ -6,7 +6,7 @@ TBA
 Install the necessary packages by running
 TBA
 ## 2. Fine-tuning
-Run `fine-tuning.py` to train the ProteinBERT on ARGs by running the follwing commands.
+Run `finetuning.py` to train the ProteinBERT on ARGs by running the follwing commands.
 If you would like to train with the HMD-ARG DB, run:
 ```
 python3 finetuning.py \
