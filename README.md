@@ -2,9 +2,13 @@
 The repository contains an implementation of ARG-BERT, a BERT model that predicts the resistance mechanism of antibiotic resistance genes. If you use this model, please cite our paper. If you have any problems or comments about this repository, please contact us.
 ## 1. Dependencies
 We have tested the model in the following environments.
+```
 TBA
-Install the necessary packages by running
+```
+We have all the necessary packages (see Dockerfile) in the Docker environment. Install them with the following command:
+```
 TBA
+```
 ## 2. Fine-tuning
 Run `finetuning.py` to train the ProteinBERT on ARGs by running the follwing commands.
 If you would like to train with the HMD-ARG DB, run:
