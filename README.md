@@ -3,11 +3,16 @@ The repository contains an implementation of ARG-BERT, a BERT model that predict
 ## 1. Dependencies
 We have tested the model in the following environments.
 ```
-TBA
+Linux: x86_64
+OS: Ubuntu 20.04.6
+GPU: NVIDIA A100 80G
+CUDA Version: 11.6
+Nvidia Driver Version: 510.47.03
 ```
 We have all the necessary packages (see Dockerfile) in the Docker environment. Install them with the following command:
 ```
 docker pull yagihamada/arg-bert
+docker run -p 5004:5004 -e -it --gpus all --rm -v $PWD:/home yagihamada/arg-bert
 ```
 ## 2. Dataset and Fine-tuning
 ### 2.1 Dataset
