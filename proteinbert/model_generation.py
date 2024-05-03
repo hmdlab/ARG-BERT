@@ -38,10 +38,10 @@ class ModelGenerator:
         
     def _init_weights(self, model):
     
-        if self.optimizer_weights is not None:
+        #if self.optimizer_weights is not None:
             # For some reason keras requires this strange little hack in order to properly initialize a new model's optimizer, so that
             # the optimizer's weights can be reloaded from an existing state.
-            self._train_for_a_dummy_epoch(model)
+            #self._train_for_a_dummy_epoch(model)
             
         if self.model_weights is not None:
             

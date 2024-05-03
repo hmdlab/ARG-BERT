@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 import argparse
+import pickle
 from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
@@ -38,9 +39,7 @@ class Config_Finetuning:
             return os.path.join(root_dir, '%s.train.csv' % sub_path)
         else:
             root_dir = 'outputs/finetuned_model'
-            if not os.path.exists(root_dir):
-                os.makedirs(root_dir)
-            return os.path.join(root_dir, sub_path)#'%s.finetuned_model.h5' % sub_path)
+            return os.path.join(root_dir,'%s.finetuned_model.h5' % sub_path)
 
     def set_gpu(self):
 
@@ -116,8 +115,6 @@ def main(config):
     #output_spec = None
     
     dataset_path = config.create_dataset_or_model_path(create_dataset_path = True)
-    if not os.path.exists(dataset_path):
-        os.makedirs(dataset_path)
     train_set, valid_set = make_train_and_valid_sets(dataset_path)
     
     # Loading the pre-trained model and fine-tuning it on the loaded dataset
@@ -137,10 +134,11 @@ def main(config):
             seq_len = 512, batch_size = 32, max_epochs_per_stage = 40, lr = 1e-04, begin_with_frozen_pretrained_layers = True, \
             lr_with_frozen_pretrained_layers = 1e-02, n_final_epochs = 1, final_seq_len = 1024, final_lr = 1e-05, callbacks = training_callbacks)
     
-    finetuned_model = model_generator.create_model(seq_len = 512)
+    finetuned_model = model_generator.create_model(seq_len = 1578)
+    
     finetuned_model_path = config.create_dataset_or_model_path(create_dataset_path = False)
-    print(finetuned_model_path)
-    finetuned_model.save(finetuned_model_path)
+    with open(finetuned_model_path, 'wb') as f:
+        pickle.dump((finetuned_model.get_weights(), finetuned_model.optimizer.get_weights()), f)
 
 if __name__ == "__main__": 
 
