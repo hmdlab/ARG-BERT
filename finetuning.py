@@ -137,8 +137,7 @@ def main(config):
             seq_len = 512, batch_size = 32, max_epochs_per_stage = 40, lr = 1e-04, begin_with_frozen_pretrained_layers = True, \
             lr_with_frozen_pretrained_layers = 1e-02, n_final_epochs = 1, final_seq_len = 1024, final_lr = 1e-05, callbacks = training_callbacks)
     
-    seq_len = 1578
-    finetuned_model = model_generator.create_model(seq_len)
+    finetuned_model = model_generator.create_model(seq_len = 512)
     finetuned_model_path = config.create_dataset_or_model_path(create_dataset_path = False)
     print(finetuned_model_path)
     finetuned_model.save(finetuned_model_path)

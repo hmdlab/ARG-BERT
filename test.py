@@ -7,6 +7,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 from proteinbert.shared_utils.util import log
+from proteinbert.model_generation import InputEncoder
 from tokenization import ADDED_TOKENS_PER_SEQ
 from tokenization import encode_dataset,split_dataset_by_len
 
@@ -29,7 +30,6 @@ class Config_Test:
         self.threshold = args.threshold
         self.seed = args.seed
         self.get_all_attention = args.get_all_attention
-        #self.create_dataset_path = create_dataset_path
         
     def create_input_path(self, create_dataset_path):
 
@@ -72,7 +72,7 @@ class Config_Test:
 
 def evaluate_by_len(model_generator, input_encoder, config,  df, start_seq_len = 512, start_batch_size = 32, increase_factor = 2):#output_spec,
     
-    assert model_generator.optimizer_weights is None
+    # assert model_generator.optimizer_weights is None
         
     results = []
     results_names = []
@@ -85,7 +85,7 @@ def evaluate_by_len(model_generator, input_encoder, config,  df, start_seq_len =
     for len_matching_dataset, seq_len, batch_size, index in split_dataset_by_len(df, start_seq_len = start_seq_len, start_batch_size = start_batch_size, \
             increase_factor = increase_factor):
 
-        X, y_true, sample_weights = encode_dataset(len_matching_dataset, input_encoder, \
+        X, y_true, sample_weights = encode_dataset(len_matching_dataset, input_encoder, config.mechanism_labels, \
                 seq_len = seq_len, needs_filtering = False)#output_spec,
         
         assert set(np.unique(sample_weights)) <= {0.0, 1.0}
@@ -158,9 +158,13 @@ def calculate_attentions(model, input_encoder, seq, seq_len = None):
 def main(config):
     
     finetuned_model = keras.models.load_model(config.create_input_path(create_dataset_path = False))
+    input_encoder = InputEncoder(len(config.mechanism_labels))
+    test_set = pd.read_csv(config.create_input_path(create_dataset_path = True), index_col = 0)
+    
     df, confusion_matrix = evaluate_by_len(finetuned_model, input_encoder, config, test_set, start_seq_len = 512, start_batch_size = 32)
     df = df.replace({v: k for k, v in config.mechanism_labels.items()})
     df.to_csv(config.create_output_path(create_dataset_path = True))
+    
     if config.get_all_attention:
         attention_fold = {}
         for i in test_set.index:

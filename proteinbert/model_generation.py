@@ -144,8 +144,7 @@ class InputEncoder:
             np.zeros((len(seqs), self.n_annotations), dtype = np.int8)
         ]
         
-def load_pretrained_model_from_dump(dump_file_path = 'proteinbert_models/default.pkl', create_model_function, create_model_kwargs = {}, optimizer_class = keras.optimizers.Adam, lr = 2e-04, \
-        other_optimizer_kwargs = {}, annots_loss_weight = 1, load_optimizer_weights = False):
+def load_pretrained_model_from_dump(dump_file_path, create_model_function, create_model_kwargs = {}, optimizer_class = keras.optimizers.Adam, lr = 2e-04, other_optimizer_kwargs = {}, annots_loss_weight = 1, load_optimizer_weights = False):
     
     with open(dump_file_path, 'rb') as f:
         n_annotations, model_weights, optimizer_weights = pickle.load(f)
