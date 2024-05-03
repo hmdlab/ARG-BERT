@@ -17,4 +17,4 @@ RUN pip install biopython
 
 WORKDIR /home
 EXPOSE 5004
-ENTRYPOINT ["jupyter","notebook","--port=5004","--no-browser","--allow-root","--ip=0.0.0.0","--NotebookApp.token='kanami-yagimoto'"]
+ENTRYPOINT ["jupyter","notebook","--port=5004","--no-browser","--allow-root","--ip=0.0.0.0","--NotebookApp.token='CHOOSE_PASSWORD'"]
