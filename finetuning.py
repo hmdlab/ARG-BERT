@@ -38,7 +38,9 @@ class Config_Finetuning:
             return os.path.join(root_dir, '%s.train.csv' % sub_path)
         else:
             root_dir = 'outputs/finetuned_model'
-            return os.path.join(root_dir, '%s.finetuned_model.h5' % sub_path)
+            if not os.path.exists(root_dir):
+                os.makedirs(root_dir)
+            return os.path.join(root_dir, sub_path)#'%s.finetuned_model.h5' % sub_path)
 
     def set_gpu(self):
 
@@ -111,6 +113,8 @@ def main(config):
 
     config.set_gpu()
     config.set_seed()
+    #output_spec = None
+    
     dataset_path = config.create_dataset_or_model_path(create_dataset_path = True)
     if not os.path.exists(dataset_path):
         os.makedirs(dataset_path)
@@ -121,7 +125,8 @@ def main(config):
     pretrained_model_generator, input_encoder = load_pretrained_model(local_model_dump_dir = 'proteinbert/proteinbert_models', local_model_dump_file_name = 'default.pkl')
 
     # get_model_with_hidden_layers_as_outputs gives the model output access to the hidden layers (on top of the output)
-    model_generator = FinetuningModelGenerator(pretrained_model_generator, pretraining_model_manipulation_function = get_model_with_hidden_layers_as_outputs, dropout_rate = 0.5)
+    model_generator = FinetuningModelGenerator(pretrained_model_generator, pretraining_model_manipulation_function = \
+                                               get_model_with_hidden_layers_as_outputs, dropout_rate = 0.5)
 
     training_callbacks = [
         keras.callbacks.ReduceLROnPlateau(patience = 1, factor = 0.25, min_lr = 1e-05, verbose = 1),
@@ -135,9 +140,7 @@ def main(config):
     seq_len = 1578
     finetuned_model = model_generator.create_model(seq_len)
     finetuned_model_path = config.create_dataset_or_model_path(create_dataset_path = False)
-
-    if not os.path.exists(finetuned_model_path):
-        os.makedirs(finetuned_model_path)
+    print(finetuned_model_path)
     finetuned_model.save(finetuned_model_path)
 
 if __name__ == "__main__": 

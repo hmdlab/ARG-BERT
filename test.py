@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import argparse
+import os
 
 import tensorflow as tf
 from tensorflow import keras
@@ -38,11 +39,11 @@ class Config_Test:
             sub_path = 'HMDARG-DB/fold_%d'%self.fold
 
         if create_dataset_path:
-            root_dir = 'dataset'
+            root_dir = 'inputs'
             return os.path.join(root_dir, '%s.test.csv' % sub_path)
         else:
-            root_dir = 'finetuned_model'
-            return os.path.join(root_dir, '%s.finetuned_model.h5' % sub_path)
+            root_dir = 'outputs/finetuned_model'
+            return os.path.join(root_dir, sub_path)#'%s.finetuned_model.h5' % sub_path)
     
     def create_output_path(self, create_dataset_path):
         
@@ -52,10 +53,14 @@ class Config_Test:
             sub_path = 'HMDARG-DB/fold_%d'%self.fold
 
         if create_dataset_path:
-            root_dir = 'result'
+            root_dir = 'outputs/Prediction results'
+            if not os.path.exists(root_dir):
+                os.makedirs(root_dir)
             return os.path.join(root_dir, '%s.test.csv' % sub_path)
         else:
-            root_dir = 'attention'
+            root_dir = 'outputs/attention'
+            if not os.path.exists(root_dir):
+                os.makedirs(root_dir)
             return os.path.join(root_dir, '%s.attn.csv' % sub_path)
         
     def n_mechanism_labels(self):
@@ -152,11 +157,10 @@ def calculate_attentions(model, input_encoder, seq, seq_len = None):
 
 def main(config):
     
-    df, confusion_matrix = evaluate_by_len(model_generator, input_encoder, config, test_set, \
-            start_seq_len = 512, start_batch_size = 32)
+    finetuned_model = keras.models.load_model(config.create_input_path(create_dataset_path = False))
+    df, confusion_matrix = evaluate_by_len(finetuned_model, input_encoder, config, test_set, start_seq_len = 512, start_batch_size = 32)
     df = df.replace({v: k for k, v in config.mechanism_labels.items()})
-    df.to_csv(config.create_output_path(create_dataset_path = True)
-    
+    df.to_csv(config.create_output_path(create_dataset_path = True))
     if config.get_all_attention:
         attention_fold = {}
         for i in test_set.index:
@@ -169,7 +173,7 @@ def main(config):
             pretrained_attention_values, pretrained_seq_tokens, pretrained_attention_labels = calculate_attentions(pretrained_model, input_encoder, seq, \
                     seq_len = seq_len)
             
-            finetuned_model = keras.models.load_model(config.create_input_path(create_dataset_path = False))
+            #finetuned_model = keras.models.load_model(config.create_input_path(create_dataset_path = False))
             finetuned_attention_values, finetuned_seq_tokens, finetuned_attention_labels = calculate_attentions(finetuned_model, input_encoder, seq,\
                     seq_len = seq_len)
     
@@ -184,9 +188,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--fold', type=int, help='The number of iterations in 5-fold CV.')
     parser.add_argument('-LHD', '--use_LHD', action='store_true', help='Whether you use Low Homology Dataset or not.')
-    parser.add_argument('-t', '--threshold', type=float, help='Sequence similarity thresholds set when creating LHD.', default='')
+    parser.add_argument('-t', '--threshold', type=float, help='Sequence similarity thresholds set when creating LHD.', default=0)
     parser.add_argument('-s', '--seed', type=int, help='Set random seed.', default=None)
-    parser.add_argument('-attn', '--get_all_attention', type=int, help='Whether you need attention or not.', default=False)
+    parser.add_argument('-attn', '--get_all_attention', action='store_true', help='Whether you need attention or not.', default=False)
     config = Config_Test(parser.parse_args())
     
     main(config)

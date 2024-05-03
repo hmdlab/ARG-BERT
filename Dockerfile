@@ -7,9 +7,7 @@ RUN curl -kL https://bootstrap.pypa.io/get-pip.py | python3
 RUN pip install tensorflow-gpu==2.10.0
 RUN pip install tensorflow==2.10.0
 RUN pip install matplotlib
-RUN pip install japanize_matplotlib
 RUN pip install jupyter
-RUN pip install protein-bert
 RUN pip install numpy==1.21.0
 RUN pip install pandas
 RUN pip install scikit-learn
@@ -17,4 +15,4 @@ RUN pip install biopython
 
 WORKDIR /home
 EXPOSE 5004
-ENTRYPOINT ["jupyter","notebook","--port=5004","--no-browser","--allow-root","--ip=0.0.0.0","--NotebookApp.token='kanami-yagimoto'"]
+ENTRYPOINT ["jupyter","notebook","--port=5004","--no-browser","--allow-root","--ip=0.0.0.0","--NotebookApp.token='CHOOSE-PASSWORD'"]
