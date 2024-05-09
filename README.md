@@ -91,5 +91,12 @@ Except as contained in this notice, the name of <copyright holders> shall not be
 ## 6. Citation
 If you would like to use ARG-BERT, please cite our paper
 ```
-@article
+@article{yagimoto2024prediction,
+  title={Prediction of antibiotic resistance mechanisms using a protein language model},
+  author={Yagimoto, Kanami and Hosoda, Shion and Sato, Miwa and Hamada, Michiaki},
+  journal={bioRxiv},
+  pages={2024--05},
+  year={2024},
+  publisher={Cold Spring Harbor Laboratory}
+}
 ```
