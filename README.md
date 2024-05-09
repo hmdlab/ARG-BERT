@@ -17,6 +17,10 @@ docker run -p 5004:5004 -e -it --gpus all --rm -v $PWD:/home yagihamada/arg-bert
 ## 2. Dataset and Fine-tuning
 ### 2.1 Dataset
 Sorry we cannot publish the HMD-ARG DB and Low Homology Dataset, but the format of the data is shown in the sample data in `Sample_data`.
+
+We saved the larger files, such as the output results and the Attention values for all sequences in the HMD-ARG DB, at [https://waseda.box.com/v/ARG-BERT-suppl](https://waseda.box.com/v/ARG-BERT-suppl).
+You could run the script if you stored the `Prediction results` in `Analysis_and_Figures` in this repository and the contents of the `Attention_analysis` in a directory of the same name in `Analysis_and_Figures`.
+
 ### 2.2 Fine-tuning
 Run `finetuning.py` to train the ProteinBERT on ARGs by running the follwing commands.
 
@@ -63,11 +67,11 @@ python3 finetuning.py \
 To get the input sequences' attention, use the command `--get_all_attention` or `-attn` in both cases.
 
 ## 4. Attention Analysis
-The code for the analysis is available in a Jupyter notebook in `Attention_analysis`. 
+The code for the analysis is available in a Jupyter notebook in `Analysis_and_Figures/Attention_analysis`. 
 
-In `Calculate amino acid conservation score.ipynb`, the experiments described in sections 2.6.1 and 3.2.1 of our paper are carried out, and Figure 3 and Figure S5 can be output.
+In `Fig3.ipynb`, the experiments described in sections 2.6.1 and 3.2.1 of our paper are carried out, and Figure 3 and Figure S5 can be output.
 
-`Identify Attention-intensive regions.ipynb` and `GO enrichment analysis.ipynb` also carry out the experiments described in sections 2.6.2 and 3.2.2, and can output Figure 4ac, S6a and S7a for `Identify Attention-intensive regions.ipynb` and Figure 5 for `GO enrichment analysis.ipynb`.
+`Fig4.ipynb` and `Fig5.ipynb` also carry out the experiments described in sections 2.6.2 and 3.2.2, and can output Figure 4ac, S6a and S7a for `Fig4.ipynb` and Figure 5 for `Fig5.ipynb`.
 
 ## 5. License
 We used ProteinBERT licensed under the MIT license; the copyright notice and permission notice for ProteinBERT are given here.
