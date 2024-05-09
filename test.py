@@ -2,14 +2,16 @@ import numpy as np
 import pandas as pd
 import argparse
 import os
+import pickle
 
 import tensorflow as tf
 from tensorflow import keras
 
 from proteinbert.shared_utils.util import log
-from proteinbert.model_generation import InputEncoder
-from tokenization import ADDED_TOKENS_PER_SEQ
-from tokenization import encode_dataset,split_dataset_by_len
+from proteinbert.existing_model_loading import load_pretrained_model
+from proteinbert.conv_and_global_attention_model import get_model_with_hidden_layers_as_outputs
+from proteinbert.model_generation import InputEncoder,FinetuningModelGenerator
+from tokenization import ADDED_TOKENS_PER_SEQ, encode_dataset, split_dataset_by_len 
 
 class Config_Test:
 
@@ -43,7 +45,7 @@ class Config_Test:
             return os.path.join(root_dir, '%s.test.csv' % sub_path)
         else:
             root_dir = 'outputs/finetuned_model'
-            return os.path.join(root_dir, sub_path)#'%s.finetuned_model.h5' % sub_path)
+            return os.path.join(root_dir,'%s.finetuned_model.h5' % sub_path)
     
     def create_output_path(self, create_dataset_path):
         
@@ -55,7 +57,7 @@ class Config_Test:
         if create_dataset_path:
             root_dir = 'outputs/Prediction results'
             if not os.path.exists(root_dir):
-                os.makedirs(root_dir)
+                os.makedirs('outputs/Prediction results/HMDARG-DB')
             return os.path.join(root_dir, '%s.test.csv' % sub_path)
         else:
             root_dir = 'outputs/attention'
@@ -91,7 +93,7 @@ def evaluate_by_len(model_generator, input_encoder, config,  df, start_seq_len =
         assert set(np.unique(sample_weights)) <= {0.0, 1.0}
         y_mask = (sample_weights == 1)
         
-        model = keras.models.load_model(config.create_input_path(create_dataset_path = False))
+        model = model_generator.create_model(seq_len)
         y_pred = model.predict(X, batch_size = batch_size)
         
         y_true = y_true[y_mask].flatten()
@@ -116,9 +118,9 @@ def get_evaluation_results(y_true, y_pred, config, return_confusion_matrix = Fal
     from scipy.stats import spearmanr
     from sklearn.metrics import roc_auc_score, accuracy_score, confusion_matrix
             
-    str_unique_labels = list(map(str, config.unique_labels))
+    str_unique_labels = list(map(str, config.mechanism_labels))
     y_pred_classes = y_pred.argmax(axis = -1)
-    confusion_matrix = pd.DataFrame(confusion_matrix(y_true, y_pred_classes, labels = np.arange(config.n_mechanism_labels)), index = str_unique_labels, \
+    confusion_matrix = pd.DataFrame(confusion_matrix(y_true, y_pred_classes, labels = np.arange(config.n_mechanism_labels())), index = str_unique_labels, \
                     columns = str_unique_labels)
          
     if return_confusion_matrix:
@@ -156,11 +158,21 @@ def calculate_attentions(model, input_encoder, seq, seq_len = None):
     return attention_values, seq_tokens, attention_labels
 
 def main(config):
-    
-    finetuned_model = keras.models.load_model(config.create_input_path(create_dataset_path = False))
-    input_encoder = InputEncoder(len(config.mechanism_labels))
-    test_set = pd.read_csv(config.create_input_path(create_dataset_path = True), index_col = 0)
-    
+
+    # Load an input dataset
+    test_set_file_path = config.create_input_path(create_dataset_path = True)
+    test_set = pd.read_csv(test_set_file_path, index_col = 0)#.dropna().drop_duplicates()
+
+    # Load a fine-tuned model
+    finetuned_model_path = config.create_input_path(create_dataset_path = False)
+    with open(finetuned_model_path, 'rb') as f:
+        model_weights, optimizer_weights = pickle.load(f)
+        
+    # Generate the fine-tuned model
+    pretrained_model_generator, input_encoder = load_pretrained_model(local_model_dump_dir = 'proteinbert/proteinbert_models', local_model_dump_file_name = 'default.pkl')
+    finetuned_model = FinetuningModelGenerator(pretrained_model_generator, pretraining_model_manipulation_function = \
+            get_model_with_hidden_layers_as_outputs, model_weights = model_weights, optimizer_weights = optimizer_weights, dropout_rate = 0.5)
+      
     df, confusion_matrix = evaluate_by_len(finetuned_model, input_encoder, config, test_set, start_seq_len = 512, start_batch_size = 32)
     df = df.replace({v: k for k, v in config.mechanism_labels.items()})
     df.to_csv(config.create_output_path(create_dataset_path = True))
@@ -172,7 +184,7 @@ def main(config):
             seq = test_set.iloc[i,-1]
             seq_len = len(seq) + 2
             
-            pretrained_model_generator, input_encoder = load_pretrained_model()
+            pretrained_model_generator, input_encoder = load_pretrained_model(local_model_dump_dir = 'proteinbert/proteinbert_models', local_model_dump_file_name = 'default.pkl')
             pretrained_model = pretrained_model_generator.create_model(seq_len)
             pretrained_attention_values, pretrained_seq_tokens, pretrained_attention_labels = calculate_attentions(pretrained_model, input_encoder, seq, \
                     seq_len = seq_len)
