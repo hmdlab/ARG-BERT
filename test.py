@@ -190,7 +190,8 @@ def main(config):
                     seq_len = seq_len)
             
             #finetuned_model = keras.models.load_model(config.create_input_path(create_dataset_path = False))
-            finetuned_attention_values, finetuned_seq_tokens, finetuned_attention_labels = calculate_attentions(finetuned_model, input_encoder, seq,\
+            finetuned_created_model = finetuned_model.create_model(seq_len)
+            finetuned_attention_values, finetuned_seq_tokens, finetuned_attention_labels = calculate_attentions(finetuned_created_model, input_encoder, seq,\
                     seq_len = seq_len)
     
             attention = finetuned_attention_values - pretrained_attention_values
